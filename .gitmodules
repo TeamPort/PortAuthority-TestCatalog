@@ -1,0 +1,6 @@
+[submodule "tensorport/tensorflow"]
+	path = tensorport/tensorflow
+	url = https://github.com/tensorflow/tensorflow.git
+[submodule "logcat-avr"]
+	path = logcat-avr
+	url = https://github.com/blakewford/logcat-avr.git
