@@ -3,11 +3,6 @@
 #include <assert.h>
 #include <fstream>
 
-#include <thread>
-
-#include <chrono>
-using namespace std::chrono;
-
 #include "SRN_AB.ino"
 
 bool gKeepGoing = true;
@@ -31,11 +26,6 @@ struct pgm
 
 pgm gScreen;
 uint64_t gFrame = 0;
-
-system_clock::time_point gSyncPoint;
-system_clock::time_point gAudioSyncPoint;
-milliseconds gFrameRate = milliseconds(1000);
-
 bool inRange(int32_t x, int32_t y)
 {
     return (x >= 0 && x < WIDTH) && (y >= 0 && y < HEIGHT);
@@ -292,20 +282,16 @@ void maskToScreen(const unsigned char* bitmap, int16_t x, int16_t y, uint8_t fra
 
 void delay(uint32_t ms)
 {
-    std::this_thread::sleep_for(milliseconds(ms));
 }
 
 long random(long howsmall, long howbig)
 {
-    long diff = howbig - howsmall;
-    return howsmall + (rand()%diff);
+    return howsmall;
 }
 
 char* ltoa_compat(long l, char * buffer, int radix)
 {
-    if(radix != 10) assert(0);
-
-    sprintf(buffer, "%ld", l);
+    buffer[0] = '0';
     return buffer;
 }
 
@@ -315,7 +301,6 @@ void Arduboy2Base::begin()
 
 void Arduboy2Base::setFrameRate(uint8_t rate)
 {
-    gFrameRate = milliseconds(1000/rate);
 }
 
 void Arduboy2Base::initRandomSeed()
@@ -324,7 +309,7 @@ void Arduboy2Base::initRandomSeed()
 
 bool Arduboy2Base::everyXFrames(uint8_t frames)
 {
-    return gFrame%frames == 0;
+    return true;
 }
 
 struct buttonState
@@ -373,30 +358,6 @@ bool Arduboy2Base::notPressed(uint8_t buttons)
 bool Arduboy2Base::justPressed(uint8_t button)
 {
     bool pressed = false;
-    switch(button)
-    {
-        case LEFT_BUTTON:
-            pressed = gCachedButtonState.leftButton;
-            break;
-        case RIGHT_BUTTON:
-            pressed = gCachedButtonState.rightButton;
-            break;
-        case UP_BUTTON:
-            pressed = gCachedButtonState.upButton;
-            break;
-        case DOWN_BUTTON:
-            pressed = gCachedButtonState.downButton;
-            break;
-        case A_BUTTON:
-            pressed = gCachedButtonState.buttonA;
-            break;
-        case B_BUTTON:
-            pressed = gCachedButtonState.buttonB;
-            break;
-        default:
-            break;
-    }
-
     return pressed;
 }
 
@@ -419,10 +380,6 @@ void Arduboy2Base::pollButtons()
 
 void Arduboy2Base::clear()
 {
-    gScreen.width = WIDTH;
-    gScreen.height = HEIGHT;
-    gScreen.image = SCREEN_DATA;
-    memset(gScreen.image, 0, WIDTH*HEIGHT*sizeof(float));
 }
 
 void Arduboy2Base::display()
@@ -674,35 +631,14 @@ unsigned long int getImageSize(const uint8_t *bitmap)
 
 void Sprites::drawSelfMasked(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame)
 {
-    unsigned long int size = getImageSize(bitmap);
-    if(size != 0)
-    {
-        writeToScreen(bitmap, x, y, frame);
-    }
 }
 
 void Sprites::drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame)
 {
-    unsigned long int size = getImageSize(bitmap);
-    if(size != 0)
-    {
-        pgm mask;
-        int32_t offset = calculateOffset(bitmap, frame);
-        convertImage(bitmap+offset, bitmap[0], bitmap[1], mask);
-        mask.height = bitmap[1];
-        eraseFromScreen(mask, x, y);
-        delete[] mask.image;
-        mask.image = nullptr;
-    }
 }
 
 void Sprites::drawPlusMask(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame)
 {
-    unsigned long int size = getImageSize(bitmap)/2;
-    if(size != 0)
-    {
-        maskToScreen(bitmap, x, y, frame);
-    }
 }
 
 int32_t SDL_Init()

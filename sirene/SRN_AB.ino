@@ -45,7 +45,7 @@ void setup() {
   arduboy.setFrameRate(60);
 }
 
-uint32_t shouldBreak = 32;
+uint32_t shouldBreak = 768;
 void loop() {
   if (!(arduboy.nextFrame())) return;
   arduboy.pollButtons();
